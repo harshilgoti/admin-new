@@ -1,0 +1,22 @@
+{
+  "presets": [
+    [
+      "@babel/env",
+      {
+        "corejs": "3.2.1",
+        "useBuiltIns": "entry",
+        "targets": {
+          "browsers": [">1%", "not dead", "not op_mini all"]
+        }
+      }
+    ],
+    "@babel/react"
+  ],
+  "plugins": [
+    "@babel/proposal-object-rest-spread",
+    "@babel/plugin-transform-runtime",
+    "@babel/proposal-class-properties",
+    "@babel/syntax-dynamic-import",
+    "preval"
+  ]
+}
