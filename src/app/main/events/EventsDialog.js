@@ -18,9 +18,6 @@ import { useDispatch, useSelector } from "react-redux";
 // import IntlMessages from "../../../util/IntlMessages";
 import { addEvent, editEvent, uploadImage, uploadImageUrlHandling } from "app/store/actions";
 
-const fileObj = [];
-const fileArray = [];
-
 const typeList =[{
   label:"Inclusion",
   value:"inclusion"
@@ -53,7 +50,10 @@ function EventsDialog(props) {
     ticket_price: "",
     type_of_seats:"",
     type:"",
+    fileObj:[],
+    fileArray:[],
     is_own_event:false,
+    gallery:[],
   location: { lat: "", lon: "" },
   };
 
@@ -63,7 +63,7 @@ function EventsDialog(props) {
 
     Object.keys(props.event).length ? setEditMode(true) : setEditMode(false);
     if(isEditMode){
-      const { name, description,ticket_price,image_url,type_of_seats,type,is_own_event} = props.event;
+      const { name, description,ticket_price,image_url,type_of_seats,type,is_own_event,gallery} = props.event;
       setInForm("name", name || "");
       setInForm("description", description || "")
       setInForm("ticket_price", ticket_price || "")
@@ -71,8 +71,7 @@ function EventsDialog(props) {
       setInForm("type_of_seats", type_of_seats || "")
       setInForm("type", type || "")
       setInForm("is_own_event", is_own_event || false)
-
-      
+      setInForm("gallery", (gallery && gallery.length&& gallery) || [])
     }
   }, [props.event,isEditMode]); // eslint-disable-line
 
@@ -86,7 +85,8 @@ function EventsDialog(props) {
       form.description && 
       form.type&&
       form.ticket_price&&
-      form.type_of_seats;
+      form.type_of_seats&&
+      !!form.gallery.length;
     
   }
 
@@ -103,16 +103,15 @@ function EventsDialog(props) {
       type:form.type,
       ticket_price:form.ticket_price,
       type_of_seats:form.type_of_seats,
-      gallery: [],
+      gallery: form.gallery,
       location: { "lat": "", "lon": "" },
       is_own_event:form.is_own_event
       }
 
-      console.log("body",body)
 
-    // isEditMode ? 
-    // dispatch(editEvent(body, props.event._id, handleAddEventsuccess)) : 
-    // dispatch(addEvent(body, handleAddEventsuccess));
+    isEditMode ? 
+    dispatch(editEvent(body, props.event._id, handleAddEventsuccess)) : 
+    dispatch(addEvent(body, handleAddEventsuccess));
   }
 
   function handleChangeImage(e) {
@@ -134,18 +133,36 @@ function EventsDialog(props) {
 
 
   function uploadMultipleFiles(e) {
-    console.log("files",Object.values(e.target.files))
-    fileObj.push(e.target.files)
-    for (let i = 0; i < fileObj[0].length; i++) {
-        fileArray.push(URL.createObjectURL(fileObj[0][i]))
+    //  console.log("files",Object.values(e.target.files))
+    console.log("files",e.target.files)
+
+    // form.fileObj.push(e.target.files)
+    // setInForm("fileObj",[...form.fileObj])
+    for (let i = 0; i < e.target.files.length; i++) {
+      form.fileArray.push(URL.createObjectURL(e.target.files[i]))
+      setInForm("fileArray",[...form.fileArray] )
+
+      var formData = new FormData();
+      formData.append("file", e.target.files[i]);
+      formData.append("key", "gallery");
+      formData.append("type", "image");
+    
+      axios
+        .post(`/upload`, formData)
+        .then(res => {
+          form.gallery.push(res.data.data.url)
+        })
+        .catch(error => {
+         
+        });
     }
-    setFile({ file:fileArray })
+    // setFile({ file:fileArray })
 }
 
-function uploadFiles(e) {
-    e.preventDefault()
-    console.log(file,fileObj)
-}
+// function uploadFiles(e) {
+//     e.preventDefault()
+//     console.log(file,form.fileObj)
+// }
 const handleChangeSelectType = (selectedOption, columnName) => {
   setInForm(columnName, selectedOption.value.split("|")[0]);
   
@@ -158,6 +175,7 @@ const handleChangeOwnEvent = (event) => {
 
 const selectedTypeDetails = typeList && typeList.find(event => event.value === form.type);
 
+console.log("form",form)
   return (
     <Dialog
     classes={{
@@ -185,16 +203,7 @@ const selectedTypeDetails = typeList && typeList.find(event => event.value === f
     <form  name="employerForm" onSubmit={handleEmployerDetail} className="flex flex-col overflow-hidden">
       <DialogContent classes={{ root: "p-16" }}>
 
-                {/* <div className="form-group multi-preview">
-                    {(fileArray || []).map(url => (
-                        <img src={url} alt="..." />
-                    ))}
-                </div>
-
-                <div className="form-group">
-                    <input type="file" className="form-control" onChange={uploadMultipleFiles} multiple />
-                </div>
-                <button type="button" className="btn btn-danger btn-block" onClick={uploadFiles}>Upload</button> */}
+               
       <TextField
           className="mb-16"
           label="Name"
@@ -230,7 +239,7 @@ const selectedTypeDetails = typeList && typeList.find(event => event.value === f
           required
           fullWidth
         />
-        <div style={{ marginBottom: "25px" }}>
+        <div style={{ marginBottom: "25px",   position: "relative", }}>
           <img
             style={{
               width: "100px",
@@ -251,7 +260,7 @@ const selectedTypeDetails = typeList && typeList.find(event => event.value === f
               display: "inline-block",
               position: "absolute",
               bottom: "0px",
-              top: "366px",
+              top: "76px",
               opacity: "0",
               height: "26px",
               cursor: "pointer",
@@ -317,7 +326,9 @@ const selectedTypeDetails = typeList && typeList.find(event => event.value === f
               />
         }
         label="Own Event"
-      /> 
+      />   
+        <div>
+             <abbr >Gallery Image</abbr>
             <div className="flex flex-wrap" 
             style={{
               backgroundColor: "#e4e4e4",
@@ -326,8 +337,9 @@ const selectedTypeDetails = typeList && typeList.find(event => event.value === f
               padding:"16px"
             }}
             >
-            {(fileArray || []).map(url => (
-                <img src={url} alt="..." style={{width:"150px",height:"150px",margin:"8px",borderRadius:"10px"}}/>
+            {((form.fileArray.length && form.fileArray) || form.gallery).map((url,i) => (
+                <img key={i}
+                src={url} alt="..." style={{width:"100px",height:"100px",margin:"8px",borderRadius:"10px"}}/>
             ))}
         </div>
 
@@ -339,6 +351,7 @@ const selectedTypeDetails = typeList && typeList.find(event => event.value === f
             type="file" className="form-control" onChange={uploadMultipleFiles} multiple 
             />
             {/* <abbr style={{ position:"absolute",right:"0px", cursor: "pointer" }}>Select Multiple Image</abbr> */}
+        </div>
         </div>
       </DialogContent>
 
@@ -376,3 +389,13 @@ export default EventsDialog;
 
 
 
+ {/* <div className="form-group multi-preview">
+                    {(fileArray || []).map(url => (
+                        <img src={url} alt="..." />
+                    ))}
+                </div>
+
+                <div className="form-group">
+                    <input type="file" className="form-control" onChange={uploadMultipleFiles} multiple />
+                </div>
+                <button type="button" className="btn btn-danger btn-block" onClick={uploadFiles}>Upload</button> */}
