@@ -134,7 +134,7 @@ function EventsDialog(props) {
 
   function uploadMultipleFiles(e) {
     //  console.log("files",Object.values(e.target.files))
-    console.log("files",e.target.files)
+    // console.log("files",e.target.files)
 
     // form.fileObj.push(e.target.files)
     // setInForm("fileObj",[...form.fileObj])
@@ -175,7 +175,6 @@ const handleChangeOwnEvent = (event) => {
 
 const selectedTypeDetails = typeList && typeList.find(event => event.value === form.type);
 
-console.log("form",form)
   return (
     <Dialog
     classes={{
