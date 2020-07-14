@@ -37,8 +37,6 @@ function EventsDialog(props) {
     uploadImageUrl
   } = useSelector(({ fuse }) => fuse.common);
 
-  const [file, setFile] = useState(null);
-   const [gallery, setGallery] = useState([]);
    const [imageFileURL, setImageFileURL] = useState()
 
 
