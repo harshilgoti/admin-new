@@ -72,6 +72,8 @@ function EventsDialog(props) {
       setInForm("type", type || "")
       setInForm("is_own_event", is_own_event || false)
       setInForm("gallery", (gallery && gallery.length&& gallery) || [])
+      setInForm("fileArray", (gallery && gallery.length&& gallery) || [])
+
     }
   }, [props.event,isEditMode]); // eslint-disable-line
 
